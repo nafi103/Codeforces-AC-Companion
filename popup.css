@@ -1,0 +1,265 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 360px;
+  font-family: Verdana, Arial, sans-serif;
+  background: #f3f3f3;
+  color: #222;
+}
+
+.popup-container {
+  max-height: 620px;
+  overflow-y: auto;
+}
+
+.popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+  border-bottom: 1px solid #b9b9b9;
+  padding: 10px 12px;
+}
+
+.popup-header h1 {
+  font-size: 16px;
+  color: #2f4f8f;
+  font-weight: 700;
+}
+
+.popup-version {
+  font-size: 11px;
+  color: #666;
+}
+
+.popup-content {
+  padding: 10px;
+}
+
+.popup-section {
+  background: #fff;
+  border: 1px solid #b9b9b9;
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.popup-section h2 {
+  font-size: 11px;
+  color: #6a6a6a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.toggle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #ececec;
+}
+
+.toggle-row:last-of-type {
+  border-bottom: none;
+}
+
+.toggle-info {
+  padding-right: 10px;
+}
+
+.toggle-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: #222;
+  margin-bottom: 2px;
+}
+
+.toggle-desc {
+  display: block;
+  font-size: 11px;
+  color: #666;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 38px;
+  height: 20px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: #d6d6d6;
+  border-radius: 20px;
+  transition: background 0.2s ease;
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  left: 2px;
+  top: 2px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+  border: 1px solid #b9b9b9;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background: #4d6edb;
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(18px);
+}
+
+.static-note {
+  margin-top: 8px;
+  font-size: 11px;
+  color: #555;
+  background: #fafafa;
+  border: 1px solid #e1e1e1;
+  border-radius: 3px;
+  padding: 6px 8px;
+}
+
+.user-rating-row {
+  display: flex;
+  gap: 8px;
+}
+
+.user-rating-input {
+  flex: 1;
+  border: 1px solid #b9b9b9;
+  border-radius: 3px;
+  padding: 7px 8px;
+  font-size: 13px;
+  color: #222;
+  background: #fff;
+}
+
+.user-rating-input:focus {
+  outline: none;
+  border-color: #7d97d6;
+}
+
+.user-rating-hint {
+  display: block;
+  margin-top: 7px;
+  font-size: 11px;
+  color: #666;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-danger {
+  border: 1px solid #9f9f9f;
+  border-radius: 2px;
+  background: linear-gradient(#fff, #f0f0f0);
+  color: #000;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.btn-primary:hover,
+.btn-secondary:hover,
+.btn-danger:hover {
+  background: linear-gradient(#fff, #e8e8e8);
+}
+
+.cache-stats {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.cache-stat {
+  flex: 1;
+  text-align: center;
+  background: #fafafa;
+  border: 1px solid #e1e1e1;
+  border-radius: 3px;
+  padding: 7px;
+}
+
+.cache-stat-value {
+  display: block;
+  font-size: 19px;
+  font-weight: 700;
+  color: #222;
+}
+
+.cache-stat-label {
+  display: block;
+  font-size: 10px;
+  color: #666;
+  margin-top: 1px;
+}
+
+.cache-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.cache-actions button {
+  flex: 1;
+}
+
+.popup-status {
+  padding: 9px 10px;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2ea44f;
+}
+
+.status-indicator.inactive .status-dot {
+  background: #c0392b;
+}
+
+.status-text {
+  font-size: 12px;
+  color: #444;
+}
+
+.popup-notification {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-50px);
+  background: #1f2937;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  transition: transform 0.25s ease;
+  z-index: 999;
+}
+
+.popup-notification.show {
+  transform: translateX(-50%) translateY(0);
+}

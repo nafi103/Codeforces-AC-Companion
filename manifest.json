@@ -1,0 +1,62 @@
+{
+  "manifest_version": 3,
+  "name": "CF AC Companion",
+  "version": "1.0.0",
+  "description": "Compact ratings, tag controls, solved-state feedback, timers, and Gym/Mashup support for Codeforces.",
+  "permissions": [
+    "alarms",
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://codeforces.com/*",
+    "https://codeforces.ml/*",
+    "https://code-forces.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://codeforces.com/problemset/problem/*",
+        "https://codeforces.com/contest/*/problem/*"
+      ],
+      "js": ["utils.js", "content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://codeforces.com/problemset*"
+      ],
+      "js": ["utils.js", "problemset.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://codeforces.com/gym/*/problem/*",
+        "https://codeforces.com/gym/*/mashup/*",
+        "https://codeforces.com/contest/*/mashup/*"
+      ],
+      "js": ["utils.js", "gym.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Codeforces Enhancer</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <header class="popup-header">
+      <h1>Codeforces Enhancer</h1>
+      <span class="popup-version">v1.0</span>
+    </header>
+
+    <main class="popup-content">
+      <section class="popup-section">
+        <h2>Practice Settings</h2>
+
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <span class="toggle-label">Hide Tags</span>
+            <span class="toggle-desc">Start with tags hidden on problem page</span>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="hideTags" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <span class="toggle-label">Problemset Ratings</span>
+            <span class="toggle-desc">Show difficulty on problemset table</span>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="enableProblemsetRatings" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <span class="toggle-label">Gym Integration</span>
+            <span class="toggle-desc">Show original ratings in Gym and Mashup</span>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="enableGymIntegration" checked>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div class="static-note">
+          Timer, AC auto-reset, and Reveal Rating are always enabled on contest problem pages.
+        </div>
+      </section>
+
+      <section class="popup-section">
+        <h2>Baseline Rating</h2>
+        <div class="user-rating-row">
+          <input
+            type="number"
+            id="userRating"
+            class="user-rating-input"
+            placeholder="Auto-detect from profile"
+            min="0"
+            max="4000"
+          >
+          <button id="fetchRatingBtn" class="btn-secondary" type="button">Fetch</button>
+        </div>
+        <span class="user-rating-hint">Used for suggested solve time (Use Suggested in timer).</span>
+      </section>
+
+      <section class="popup-section">
+        <h2>Cache</h2>
+        <div class="cache-stats" id="cacheStats">
+          <div class="cache-stat">
+            <span class="cache-stat-value" id="cacheCount">-</span>
+            <span class="cache-stat-label">Problems</span>
+          </div>
+          <div class="cache-stat">
+            <span class="cache-stat-value" id="cacheAge">-</span>
+            <span class="cache-stat-label">Last refresh</span>
+          </div>
+        </div>
+        <div class="cache-actions">
+          <button id="refreshCacheBtn" class="btn-primary" type="button">Refresh</button>
+          <button id="clearCacheBtn" class="btn-danger" type="button">Clear</button>
+        </div>
+      </section>
+
+      <section class="popup-section popup-status" id="statusSection">
+        <div class="status-indicator active" id="statusIndicator">
+          <span class="status-dot"></span>
+          <span class="status-text">Ready</span>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
