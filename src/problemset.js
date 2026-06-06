@@ -6,6 +6,8 @@
 (function() {
   'use strict';
 
+  const B = typeof browser !== 'undefined' ? browser : chrome;
+
   /**
    * Extract all visible problem IDs from the problemset table
    */
@@ -33,7 +35,18 @@
     return problems;
   }
 
-  // getRatingColor is now imported from utils.js
+  function getRatingColor(rating) {
+    if (rating >= 3000) return '#aa0000';
+    if (rating >= 2600) return '#ff0000';
+    if (rating >= 2400) return '#ff0000';
+    if (rating >= 2300) return '#ff8c00';
+    if (rating >= 2100) return '#ff8c00';
+    if (rating >= 1900) return '#aa00aa';
+    if (rating >= 1600) return '#0000ff';
+    if (rating >= 1400) return '#03a89e';
+    if (rating >= 1200) return '#008000';
+    return '#808080';
+  }
 
   /**
    * Inject rating badge into a problem row
@@ -137,7 +150,7 @@
     }
 
     try {
-      const response = await chrome.runtime.sendMessage({
+      const response = await B.runtime.sendMessage({
         action: 'getBatchRatings',
         problems: problems.map((problem) => ({
           contestId: problem.contestId,

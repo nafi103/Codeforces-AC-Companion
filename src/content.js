@@ -7,6 +7,8 @@
 (function() {
   'use strict';
 
+  const B = typeof browser !== 'undefined' ? browser : chrome;
+
   const API_BASE = 'https://codeforces.com/api';
 
   let settings = {
@@ -34,7 +36,7 @@
 
   async function sendRuntimeMessage(request) {
     try {
-      return await chrome.runtime.sendMessage(request);
+      return await B.runtime.sendMessage(request);
     } catch (error) {
       console.warn('[CFE] Runtime message failed:', error);
       return null;
@@ -44,7 +46,7 @@
   async function getStoredUserRating(handle) {
     try {
       const key = `cfe_user_${handle}`;
-      const result = await chrome.storage.local.get([key]);
+      const result = await B.storage.local.get([key]);
       const cached = result[key];
       if (Number.isInteger(cached)) {
         return cached;
@@ -64,7 +66,7 @@
 
   async function setStoredUserRating(handle, rating) {
     try {
-      await chrome.storage.local.set({ [`cfe_user_${handle}`]: rating });
+      await B.storage.local.set({ [`cfe_user_${handle}`]: rating });
     } catch (error) {
       console.warn('[CFE] Could not store user rating:', error);
     }
@@ -72,7 +74,7 @@
 
   async function setLastKnownHandle(handle) {
     try {
-      await chrome.storage.local.set({ cfe_last_handle: handle });
+      await B.storage.local.set({ cfe_last_handle: handle });
     } catch (error) {
       console.warn('[CFE] Could not store handle:', error);
     }
@@ -103,11 +105,22 @@
     return handle || null;
   }
 
-  // getRatingColor is now imported from utils.js
+  function getRatingColor(rating) {
+    if (rating >= 3000) return '#aa0000';
+    if (rating >= 2600) return '#ff0000';
+    if (rating >= 2400) return '#ff0000';
+    if (rating >= 2300) return '#ff8c00';
+    if (rating >= 2100) return '#ff8c00';
+    if (rating >= 1900) return '#aa00aa';
+    if (rating >= 1600) return '#0000ff';
+    if (rating >= 1400) return '#03a89e';
+    if (rating >= 1200) return '#008000';
+    return '#808080';
+  }
 
   async function loadSettings() {
     try {
-      settings = await chrome.storage.sync.get({
+      settings = await B.storage.sync.get({
         hideTagsAutomatically: true,
         userRating: null
       });
@@ -1139,7 +1152,7 @@
       startAcceptedPolling();
     }
 
-    chrome.storage.onChanged.addListener((changes, namespace) => {
+    B.storage.onChanged.addListener((changes, namespace) => {
       if (namespace !== 'sync') {
         return;
       }

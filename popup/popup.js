@@ -1,3 +1,5 @@
+const B = typeof browser !== "undefined" ? browser : chrome;
+
 /**
  * CF AC Companion - Popup Script
  * Handles: settings toggles, cache management, user rating input
@@ -16,6 +18,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   const statusIndicator = document.getElementById('statusIndicator');
 
   let currentSettings = {};
+
+  async function executeScriptInTab(tabId, func) {
+    const results = await B.scripting.executeScript({
+      target: { tabId },
+      func
+    });
+    return results[0]?.result ?? null;
+  }
 
   function showNotification(message) {
     const existing = document.querySelector('.popup-notification');
@@ -45,7 +55,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     try {
-      const result = await chrome.storage.sync.get(defaults);
+      const result = await B.storage.sync.get(defaults);
       currentSettings = result;
 
       hideTagsToggle.checked = result.hideTagsAutomatically;
@@ -63,7 +73,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   async function saveSetting(key, value) {
     try {
-      await chrome.storage.sync.set({ [key]: value });
+      await B.storage.sync.set({ [key]: value });
       currentSettings[key] = value;
       showNotification('Setting saved');
     } catch (e) {
@@ -105,31 +115,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     fetchRatingBtn.disabled = true;
 
     try {
-      const stored = await chrome.storage.local.get(['cfe_last_handle']);
+      const stored = await B.storage.local.get(['cfe_last_handle']);
       let handle = stored.cfe_last_handle || null;
 
       if (!handle) {
-        const tabs = await chrome.tabs.query({
-          active: true,
-          currentWindow: true
-        });
+      const tabs = await B.tabs.query({
+        active: true,
+        currentWindow: true
+      });
 
-        const activeTab = tabs[0];
-        if (!activeTab?.url?.includes('codeforces.com')) {
-          showNotification('Open a Codeforces page first');
-          return;
-        }
-
-        const results = await chrome.scripting.executeScript({
-          target: { tabId: activeTab.id },
-          func: () => {
-            const handleLink = document.querySelector('.avatar + a[href*="/profile/"], a[href*="/profile/"]');
-            return handleLink ? handleLink.textContent.trim() : null;
-          }
-        });
-
-        handle = results[0]?.result;
+      const activeTab = tabs[0];
+      if (!activeTab?.id) {
+        showNotification('No active tab');
+        return;
       }
+
+      if (!activeTab?.url?.includes('codeforces.com')) {
+        showNotification('Open a Codeforces page first');
+        return;
+      }
+
+      handle = await executeScriptInTab(activeTab.id, () => {
+        const handleLink = document.querySelector('.avatar + a[href*="/profile/"], a[href*="/profile/"]');
+        return handleLink ? handleLink.textContent.trim() : null;
+      });
+    }
 
       if (!handle) {
         showNotification('Not logged in to Codeforces');
@@ -137,7 +147,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       // Fetch rating via background script
-      const response = await chrome.runtime.sendMessage({
+      const response = await B.runtime.sendMessage({
         action: 'fetchUserRating',
         handle: handle
       });
@@ -161,7 +171,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function updateCacheStats() {
     try {
       // Get stats from background
-      const stats = await chrome.runtime.sendMessage({ action: 'getCacheStats' });
+      const stats = await B.runtime.sendMessage({ action: 'getCacheStats' });
 
       if (stats.count !== undefined) {
         cacheCountEl.textContent = stats.count.toLocaleString();
@@ -193,7 +203,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     refreshCacheBtn.textContent = 'Refreshing...';
 
     try {
-      const result = await chrome.runtime.sendMessage({ action: 'refreshCache' });
+      const result = await B.runtime.sendMessage({ action: 'refreshCache' });
       if (result.success) {
         showNotification(`Cached ${result.count} problems`);
         updateCacheStats();
@@ -214,12 +224,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     try {
       // Clear via background
-      await chrome.runtime.sendMessage({ action: 'clearCache' });
+      await B.runtime.sendMessage({ action: 'clearCache' });
 
-      const local = await chrome.storage.local.get(null);
+      const local = await B.storage.local.get(null);
       const keysToRemove = Object.keys(local).filter((key) => key === 'cfe_last_handle' || key.startsWith('cfe_user_'));
       if (keysToRemove.length > 0) {
-        await chrome.storage.local.remove(keysToRemove);
+        await B.storage.local.remove(keysToRemove);
       }
 
       showNotification('Cache cleared');
@@ -235,7 +245,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await updateCacheStats();
 
     // Update status
-    const tabs = await chrome.tabs.query({
+    const tabs = await B.tabs.query({
       active: true,
       currentWindow: true
     });

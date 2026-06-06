@@ -1,6 +1,8 @@
 # CF AC Companion
 
-A Chrome extension for Codeforces that keeps the page lightweight while adding practical solving tools: compact ratings, tag toggles, a per-problem timer, solved-state feedback, problemset ratings, and Gym/Mashup support.
+A unified cross-browser extension for Codeforces that keeps the page lightweight while adding practical solving tools: compact ratings, tag toggles, a per-problem timer, solved-state feedback, problemset ratings, and Gym/Mashup support.
+
+This version is natively compatible with both Chromium-based browsers (Chrome, Edge, Brave) and Gecko-based browsers (Firefox, Zen) using a single Manifest V3 codebase.
 
 ## Features
 
@@ -50,17 +52,23 @@ A Chrome extension for Codeforces that keeps the page lightweight while adding p
 
 ## Installation
 
-### From Source (Developer Mode)
+### For Chrome / Edge / Brave (Developer Mode)
 
 1. Download or clone this repository
-2. Open Chrome and navigate to `chrome://extensions/`
+2. Open your browser and navigate to the extensions page (e.g., `chrome://extensions/`)
 3. Enable "Developer mode" in the top right corner
-4. Click "Load unpacked" and select the extension folder
+4. Click "Load unpacked" and select the `CF-AC-Companion-Unified` folder
 5. The extension icon should appear in your browser toolbar
 
-### From Chrome Web Store
+### For Firefox / Zen Browser
 
-*Coming soon*
+1. Download or clone this repository
+2. Open your browser and navigate to `about:debugging#/runtime/this-firefox`
+3. Click "Load Temporary Add-on..."
+4. Select the `manifest.json` file inside the `CF-AC-Companion-Unified` folder
+5. The extension will be loaded and ready to use
+
+*(Note: Temporary add-ons in Firefox/Zen are removed when the browser restarts. For a permanent installation, the extension needs to be packaged and signed.)*
 
 ## Configuration
 
@@ -71,47 +79,28 @@ Click the extension icon in your browser toolbar to access settings:
 - **Gym Integration**: Enable rating display in Gym/Mashup
 - **Your Rating**: Set manually or leave blank to auto-detect from your Codeforces profile
 
-## How It Works
-
-### Problem Pages
-When you visit a Codeforces problem page, the extension:
-1. Identifies the contest and problem index from the URL
-2. Loads cached ratings and current settings
-3. Injects the compact rating card and timer into the sidebar
-4. Checks whether the problem is already accepted
-5. Shows the solved card above the timer when appropriate
-6. Adds controls for tags, standings, and timer actions
-
-### Rating Colors
-The extension uses Codeforces' official rating colors:
-- **Newbie** (< 1200): Gray
-- **Pupil** (1200-1399): Green
-- **Specialist** (1400-1599): Cyan
-- **Expert** (1600-1899): Blue
-- **Candidate Master** (1900-2099): Purple
-- **Master** (2100-2299): Orange
-- **International Master** (2300-2399): Orange
-- **Grandmaster** (2400-2599): Red
-- **International Grandmaster** (2600-2999): Red
-- **Legendary Grandmaster** (>= 3000): Dark Red
-
 ## Architecture
 
+The extension uses a unified Manifest V3 codebase without any build steps. It implements a lightweight shim (`const B = typeof browser !== 'undefined' ? browser : chrome;`) to handle API namespaces across different browser engines.
+
 ```
-codeforces-enhancer/
-|-- manifest.json          # Extension manifest (v3)
-|-- background.js          # Service worker for API calls & rating caching
-|-- content.js             # Main content script for problem pages
-|-- problemset.js          # Content script for problemset pages
-|-- gym.js                 # Content script for gym/mashup pages
-|-- styles.css             # Adaptive styles with dark mode support
-|-- popup.html             # Extension popup UI
-|-- popup.js               # Popup functionality
-|-- popup.css              # Popup styles
-|-- icons/                 # Extension icons
-    |-- icon16.png
-    |-- icon48.png
-    |-- icon128.png
+CF-AC-Companion-Unified/
+├── manifest.json          # Unified Manifest V3 (supports both service_worker and scripts)
+├── src/
+│   ├── background.js      # Background script for API calls & caching
+│   ├── content.js         # Main content script for problem pages
+│   ├── problemset.js      # Content script for problemset pages
+│   └── gym.js             # Content script for gym/mashup pages
+├── popup/
+│   ├── popup.html         # Extension popup UI
+│   ├── popup.js           # Popup functionality
+│   └── popup.css          # Popup styles
+├── styles/
+│   └── content.css        # Adaptive content styles with dark mode support
+└── icons/                 # Extension icons
+    ├── icon16.png
+    ├── icon48.png
+    └── icon128.png
 ```
 
 ## API Usage
@@ -134,7 +123,3 @@ Problem ratings are cached in the background worker and shared across the extens
 ## License
 
 MIT License
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit issues or pull requests.
