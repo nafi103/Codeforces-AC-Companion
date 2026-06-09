@@ -180,32 +180,18 @@
   }
 
   async function fetchProblemTags(contestId, problemIndex) {
-    const cacheKey = `cfe_tags_${contestId}_${problemIndex}`;
-    const cached = sessionStorage.getItem(cacheKey);
-    if (cached) {
-      try {
-        const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed)) {
-          return parsed;
-        }
-      } catch (error) {
-        // Ignore stale cache parse errors.
-      }
-    }
-
     try {
-      const response = await fetch(`${API_BASE}/problemset.problems`);
-      const data = await response.json();
-      if (data.status !== 'OK') {
-        return [];
+      const response = await sendRuntimeMessage({
+        action: 'getTags',
+        contestId,
+        problemIndex
+      });
+
+      if (response && Array.isArray(response.tags)) {
+        return response.tags;
       }
 
-      const problem = data.result.problems.find((item) => (
-        item.contestId === parseInt(contestId, 10) && item.index === problemIndex
-      ));
-      const tags = problem && Array.isArray(problem.tags) ? problem.tags : [];
-      sessionStorage.setItem(cacheKey, JSON.stringify(tags));
-      return tags;
+      return [];
     } catch (error) {
       console.warn('[CFE] Could not fetch problem tags:', error);
       return [];
@@ -563,7 +549,7 @@
           showBtn.disabled = true;
           showBtn.textContent = 'Loading...';
           const tags = await fetchProblemTags(runtime.contestId, runtime.problemIndex);
-          generatedBox.innerHTML = '';
+          generatedBox.textContent = '';
 
           if (tags.length === 0) {
             const empty = document.createElement('div');
@@ -617,7 +603,7 @@
       button.textContent = 'Loading';
 
       const tags = await fetchProblemTags(runtime.contestId, runtime.problemIndex);
-      container.innerHTML = '';
+      container.textContent = '';
 
       if (tags.length === 0) {
         const empty = document.createElement('div');
@@ -657,28 +643,61 @@
 
     const card = document.createElement('div');
     card.className = 'cfe-compact-card';
-    card.innerHTML = `
-      <div class="cfe-card-title">&#8594; CF GetRating</div>
-      <div class="cfe-rating-tags-inline">
-        <span class="tag-box cfe-rating-pill cfe-fog-value cfe-difficulty-value" data-rating="${runtime.problemRating || ''}">${ratingText}</span>
-        <span class="cfe-generated-tags cfe-card-tags cfe-hidden" data-loaded="false"></span>
-      </div>
-      <div class="cfe-compact-actions">
-        <button type="button" class="cfe-cf-btn cfe-reveal-rating-btn" ${runtime.problemRating ? '' : 'disabled'}>Rating</button>
-        <a class="cfe-cf-btn cfe-cf-btn-secondary" href="${getStandingsUrl(runtime.contestId)}" target="_blank">Standing</a>
-        <button type="button" class="cfe-cf-btn cfe-cf-btn-secondary cfe-card-tags-btn" data-hidden="true">Tags</button>
-      </div>
-    `;
+
+    const cardTitle = document.createElement('div');
+    cardTitle.className = 'cfe-card-title';
+    cardTitle.textContent = '\u2192 CF GetRating';
+
+    const ratingTagsInline = document.createElement('div');
+    ratingTagsInline.className = 'cfe-rating-tags-inline';
+
+    const ratingPill = document.createElement('span');
+    ratingPill.className = 'tag-box cfe-rating-pill cfe-fog-value cfe-difficulty-value';
+    ratingPill.dataset.rating = runtime.problemRating || '';
+    ratingPill.textContent = ratingText;
+
+    const cardTags = document.createElement('span');
+    cardTags.className = 'cfe-generated-tags cfe-card-tags cfe-hidden';
+    cardTags.dataset.loaded = 'false';
+
+    ratingTagsInline.appendChild(ratingPill);
+    ratingTagsInline.appendChild(cardTags);
+
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'cfe-compact-actions';
+
+    const revealButton = document.createElement('button');
+    revealButton.type = 'button';
+    revealButton.className = 'cfe-cf-btn cfe-reveal-rating-btn';
+    revealButton.textContent = 'Rating';
+    if (!runtime.problemRating) revealButton.disabled = true;
+
+    const standingLink = document.createElement('a');
+    standingLink.className = 'cfe-cf-btn cfe-cf-btn-secondary';
+    standingLink.href = getStandingsUrl(runtime.contestId);
+    standingLink.target = '_blank';
+    standingLink.textContent = 'Standing';
+
+    const tagsButton = document.createElement('button');
+    tagsButton.type = 'button';
+    tagsButton.className = 'cfe-cf-btn cfe-cf-btn-secondary cfe-card-tags-btn';
+    tagsButton.dataset.hidden = 'true';
+    tagsButton.textContent = 'Tags';
+
+    actionsDiv.appendChild(revealButton);
+    actionsDiv.appendChild(standingLink);
+    actionsDiv.appendChild(tagsButton);
+
+    card.appendChild(cardTitle);
+    card.appendChild(ratingTagsInline);
+    card.appendChild(actionsDiv);
 
     sidebar.appendChild(card);
 
-    const revealBtn = card.querySelector('.cfe-reveal-rating-btn');
-    revealBtn.addEventListener('click', revealAndSuggest);
+    revealButton.addEventListener('click', revealAndSuggest);
 
-    const cardTagsBtn = card.querySelector('.cfe-card-tags-btn');
-    const cardTagsContainer = card.querySelector('.cfe-card-tags');
-    if (cardTagsBtn && cardTagsContainer) {
-      cardTagsBtn.addEventListener('click', () => toggleCardTags(cardTagsBtn, cardTagsContainer));
+    if (tagsButton && cardTags) {
+      tagsButton.addEventListener('click', () => toggleCardTags(tagsButton, cardTags));
     }
 
     updateCardSolvedBadge();
@@ -708,7 +727,10 @@
     const card = document.createElement('div');
     card.className = 'cfe-solved-status-card';
     card.classList.add('cfe-solved');
-    card.innerHTML = '<div class="cfe-solved-status-text">Solved</div>';
+    const solvedText = document.createElement('div');
+    solvedText.className = 'cfe-solved-status-text';
+    solvedText.textContent = 'Solved';
+    card.appendChild(solvedText);
 
     const sidebar = document.querySelector('#sidebar');
     const timer = document.querySelector('.cfe-timer-module');
@@ -777,16 +799,47 @@
 
     const timer = document.createElement('div');
     timer.className = 'cfe-timer-module';
-    timer.innerHTML = `
-      <div class="cfe-timer-header">Set target time</div>
-      <div class="cfe-timer-display">00:00</div>
-      <div class="cfe-timer-controls">
-        <input type="text" class="cfe-timer-input" placeholder="MM:SS" value="00:00">
-        <button type="button" class="cfe-cf-btn cfe-timer-toggle-btn">Start</button>
-        <button type="button" class="cfe-cf-btn cfe-cf-btn-secondary cfe-use-suggested-btn">Use Suggested</button>
-        <button type="button" class="cfe-cf-btn cfe-cf-btn-secondary cfe-reset-btn cfe-hidden">Reset</button>
-      </div>
-    `;
+
+    const timerHeader = document.createElement('div');
+    timerHeader.className = 'cfe-timer-header';
+    timerHeader.textContent = 'Set target time';
+
+    const timerDisplay = document.createElement('div');
+    timerDisplay.className = 'cfe-timer-display';
+    timerDisplay.textContent = '00:00';
+
+    const timerControls = document.createElement('div');
+    timerControls.className = 'cfe-timer-controls';
+
+    const timerInput = document.createElement('input');
+    timerInput.type = 'text';
+    timerInput.className = 'cfe-timer-input';
+    timerInput.placeholder = 'MM:SS';
+    timerInput.value = '00:00';
+
+    const toggleBtn = document.createElement('button');
+    toggleBtn.type = 'button';
+    toggleBtn.className = 'cfe-cf-btn cfe-timer-toggle-btn';
+    toggleBtn.textContent = 'Start';
+
+    const suggestedBtn = document.createElement('button');
+    suggestedBtn.type = 'button';
+    suggestedBtn.className = 'cfe-cf-btn cfe-cf-btn-secondary cfe-use-suggested-btn';
+    suggestedBtn.textContent = 'Use Suggested';
+
+    const resetBtn = document.createElement('button');
+    resetBtn.type = 'button';
+    resetBtn.className = 'cfe-cf-btn cfe-cf-btn-secondary cfe-reset-btn cfe-hidden';
+    resetBtn.textContent = 'Reset';
+
+    timerControls.appendChild(timerInput);
+    timerControls.appendChild(toggleBtn);
+    timerControls.appendChild(suggestedBtn);
+    timerControls.appendChild(resetBtn);
+
+    timer.appendChild(timerHeader);
+    timer.appendChild(timerDisplay);
+    timer.appendChild(timerControls);
 
     const sidebar = document.querySelector('#sidebar');
     if (sidebar) {
@@ -811,19 +864,14 @@
       document.body.appendChild(timer);
     }
 
-    const input = timer.querySelector('.cfe-timer-input');
-    const toggleBtn = timer.querySelector('.cfe-timer-toggle-btn');
-    const suggestedBtn = timer.querySelector('.cfe-use-suggested-btn');
-    const resetBtn = timer.querySelector('.cfe-reset-btn');
-
-    input.addEventListener('change', () => {
-      const parsed = parseTimeInput(input.value);
+    timerInput.addEventListener('change', () => {
+      const parsed = parseTimeInput(timerInput.value);
       if (parsed === null) {
-        input.classList.add('cfe-input-error');
+        timerInput.classList.add('cfe-input-error');
         return;
       }
 
-      input.classList.remove('cfe-input-error');
+      timerInput.classList.remove('cfe-input-error');
       runtime.remainingSeconds = parsed;
       updateTimerDisplay();
     });
@@ -836,7 +884,7 @@
 
       let initialSeconds = runtime.remainingSeconds;
       if (!runtime.timerSessionStarted || initialSeconds <= 0) {
-        const parsed = parseTimeInput(input.value);
+        const parsed = parseTimeInput(timerInput.value);
         if (parsed !== null) {
           initialSeconds = parsed;
         } else if (runtime.suggestedSeconds) {
@@ -854,8 +902,8 @@
     suggestedBtn.addEventListener('click', () => {
       runtime.suggestedSeconds = calculateTargetSeconds(runtime.baselineRating, runtime.problemRating);
       runtime.remainingSeconds = runtime.suggestedSeconds;
-      input.value = formatSeconds(runtime.suggestedSeconds);
-      input.classList.remove('cfe-input-error');
+      timerInput.value = formatSeconds(runtime.suggestedSeconds);
+      timerInput.classList.remove('cfe-input-error');
       updateTimerDisplay();
     });
 
@@ -1120,12 +1168,7 @@
 
     runtime.problemRating = await fetchProblemRating(runtime.contestId, runtime.problemIndex);
     runtime.baselineRating = settings.userRating || await fetchUserRating();
-    if (runtime.suggestedSeconds === null) {
-      runtime.suggestedSeconds = null;
-    }
-    if (!runtime.remainingSeconds) {
-      runtime.remainingSeconds = 0;
-    }
+
 
     injectCompactCard();
     injectTimerModule();

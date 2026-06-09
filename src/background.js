@@ -6,6 +6,7 @@ const B = typeof browser !== 'undefined' ? browser : chrome;
 const API_BASE = 'https://codeforces.com/api';
 
 let globalCache = null;
+let globalTagsCache = null;
 let lastFetchTime = 0;
 const CACHE_TTL = 24 * 60 * 60 * 1000;
 const CACHE_MISS_COOLDOWN = 5 * 60 * 1000;
@@ -19,6 +20,9 @@ async function loadCacheFromStorage() {
     if (age >= CACHE_TTL) return false;
     globalCache = stored.cfe_ratings_cache;
     lastFetchTime = stored.cfe_cache_time;
+    // Load tags cache alongside ratings
+    const tagsStored = await B.storage.local.get(['cfe_tags_cache']);
+    if (tagsStored.cfe_tags_cache) globalTagsCache = tagsStored.cfe_tags_cache;
     return true;
   } catch (e) { return false; }
 }
@@ -38,11 +42,18 @@ async function refreshProblemCache() {
     const data = await response.json();
     if (data.status === 'OK') {
       globalCache = {};
+      globalTagsCache = {};
       for (const p of data.result.problems) {
-        if (p.rating !== undefined) globalCache[`${p.contestId}_${p.index}`] = p.rating;
+        const key = `${p.contestId}_${p.index}`;
+        if (p.rating !== undefined) globalCache[key] = p.rating;
+        if (Array.isArray(p.tags)) globalTagsCache[key] = p.tags;
       }
       lastFetchTime = Date.now();
-      await B.storage.local.set({ cfe_ratings_cache: globalCache, cfe_cache_time: lastFetchTime });
+      await B.storage.local.set({
+        cfe_ratings_cache: globalCache,
+        cfe_tags_cache: globalTagsCache,
+        cfe_cache_time: lastFetchTime
+      });
       return true;
     }
   } catch (e) { console.error('[CFE BG] Cache refresh failed:', e); }
@@ -87,8 +98,8 @@ B.runtime.onMessage.addListener((request, sender, sendResponse) => {
         break;
       }
       case 'clearCache': {
-        globalCache = null; lastFetchTime = 0; activeFetchPromise = null;
-        await B.storage.local.remove(['cfe_ratings_cache', 'cfe_cache_time']);
+        globalCache = null; globalTagsCache = null; lastFetchTime = 0; activeFetchPromise = null;
+        await B.storage.local.remove(['cfe_ratings_cache', 'cfe_tags_cache', 'cfe_cache_time']);
         try { await B.alarms.clear('cacheRefresh'); B.alarms.create('cacheRefresh', { periodInMinutes: 1440 }); } catch (_) {}
         sendResponse({ success: true });
         break;
@@ -100,12 +111,20 @@ B.runtime.onMessage.addListener((request, sender, sendResponse) => {
       }
       case 'fetchUserRating': {
         try {
-          const resp = await fetch(`${API_BASE}/user.info?handles=${request.handle}`);
+          const resp = await fetch(`${API_BASE}/user.info?handles=${encodeURIComponent(request.handle)}`);
           const d = await resp.json();
           if (d.status === 'OK' && d.result.length > 0) {
             sendResponse({ rating: d.result[0].rating, maxRating: d.result[0].maxRating, rank: d.result[0].rank });
           } else { sendResponse({ error: 'User not found' }); }
         } catch (e) { sendResponse({ error: e.message }); }
+        break;
+      }
+      case 'getTags': {
+        const { contestId: cId, problemIndex: pIdx } = request;
+        await ensureCacheLoaded();
+        const key = `${cId}_${pIdx}`;
+        const tags = (globalTagsCache && globalTagsCache[key]) ? globalTagsCache[key] : [];
+        sendResponse({ tags });
         break;
       }
       default: sendResponse({ error: 'Unknown action' });

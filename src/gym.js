@@ -163,12 +163,22 @@
 
     const ratingDiv = document.createElement('div');
     ratingDiv.className = 'cfe-gym-rating';
-    ratingDiv.innerHTML = `
-      <div class="cfe-rating-header">Original Problem Rating</div>
-      <div class="cfe-rating-value-container">
-        <span class="cfe-rating-value" style="color: ${color}">${rating}</span>
-      </div>
-    `;
+
+    const header = document.createElement('div');
+    header.className = 'cfe-rating-header';
+    header.textContent = 'Original Problem Rating';
+
+    const valueContainer = document.createElement('div');
+    valueContainer.className = 'cfe-rating-value-container';
+
+    const valueSpan = document.createElement('span');
+    valueSpan.className = 'cfe-rating-value';
+    valueSpan.style.color = color;
+    valueSpan.textContent = String(rating);
+
+    valueContainer.appendChild(valueSpan);
+    ratingDiv.appendChild(header);
+    ratingDiv.appendChild(valueContainer);
 
     sidebar.insertBefore(ratingDiv, sidebar.firstChild);
   }
@@ -185,11 +195,22 @@
 
     const noteDiv = document.createElement('div');
     noteDiv.className = 'cfe-gym-rating cfe-gym-rating-unknown';
-    noteDiv.innerHTML = `
-      <div class="cfe-rating-header">Original Problem Rating</div>
-      <div class="cfe-rating-unavailable">Could not determine original problem ID</div>
-      <div class="cfe-rating-hint">Original contest link may be in the problem statement</div>
-    `;
+
+    const noteHeader = document.createElement('div');
+    noteHeader.className = 'cfe-rating-header';
+    noteHeader.textContent = 'Original Problem Rating';
+
+    const unavailable = document.createElement('div');
+    unavailable.className = 'cfe-rating-unavailable';
+    unavailable.textContent = 'Could not determine original problem ID';
+
+    const hint = document.createElement('div');
+    hint.className = 'cfe-rating-hint';
+    hint.textContent = 'Original contest link may be in the problem statement';
+
+    noteDiv.appendChild(noteHeader);
+    noteDiv.appendChild(unavailable);
+    noteDiv.appendChild(hint);
 
     sidebar.insertBefore(noteDiv, sidebar.firstChild);
   }
@@ -209,11 +230,19 @@
 
     const linkContainer = document.createElement('div');
     linkContainer.className = 'cfe-standings-link';
-    linkContainer.innerHTML = `
-      <a href="${standingsUrl}" target="_blank" class="cfe-standings-btn">
-        <span class="cfe-icon">&#x1F4CA;</span> ${type === 'mashup' ? 'Mashup' : 'Gym'} Standings
-      </a>
-    `;
+
+    const anchor = document.createElement('a');
+    anchor.href = standingsUrl;
+    anchor.target = '_blank';
+    anchor.className = 'cfe-standings-btn';
+
+    const icon = document.createElement('span');
+    icon.className = 'cfe-icon';
+    icon.textContent = '\u{1F4CA}';
+
+    anchor.appendChild(icon);
+    anchor.appendChild(document.createTextNode(` ${type === 'mashup' ? 'Mashup' : 'Gym'} Standings`));
+    linkContainer.appendChild(anchor);
 
     const ratingDisplay = sidebar.querySelector('.cfe-gym-rating');
     if (ratingDisplay) {

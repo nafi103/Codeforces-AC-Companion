@@ -1,13 +1,16 @@
 {
   "manifest_version": 3,
   "name": "CF AC Companion",
-  "version": "2.0.0",
+  "version": "1.0.0",
   "description": "Compact ratings, tag controls, solved-state feedback, timers, and Gym/Mashup support for Codeforces.",
 
   "browser_specific_settings": {
     "gecko": {
       "id": "cf-ac-companion@local",
-      "strict_min_version": "128.0"
+      "strict_min_version": "142.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
     }
   },
 
@@ -19,9 +22,7 @@
   ],
 
   "host_permissions": [
-    "https://codeforces.com/*",
-    "https://codeforces.ml/*",
-    "https://code-forces.com/*"
+    "https://codeforces.com/*"
   ],
 
   "action": {
@@ -35,8 +36,7 @@
 
   "background": {
     "service_worker": "src/background.js",
-    "scripts": ["src/background.js"],
-    "type": "module"
+    "scripts": ["src/background.js"]
   },
 
   "content_scripts": [

@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         handle: handle
       });
 
-      if (response.error) {
+      if (!response || response.error) {
         showNotification('Could not fetch rating');
       } else {
         userRatingInput.value = response.rating;
